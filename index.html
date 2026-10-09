@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ULTIMATE MINECRAFT JS PROTECTOR</title>
+
+    <style>
+        :root {
+            --primary: #00ff66;
+            --primary-hover: #00cc52;
+            --bg-dark: #0a0a0c;
+            --panel-bg: #141417;
+            --border-color: #2a2a30;
+            --text-main: #e3e3e6;
+            --text-muted: #8a8a93;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px 12px;
+        }
+
+        .wrapper {
+            max-width: 1100px;
+            margin: auto;
+            background: var(--panel-bg);
+            padding: 25px;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 12px 40px #0009;
+        }
+
+        h1 {
+            color: var(--primary);
+            text-align: center;
+            font-size: clamp(21px, 4vw, 28px);
+            overflow-wrap: anywhere;
+        }
+
+        .desc {
+            color: var(--text-muted);
+            text-align: center;
+            line-height: 1.7;
+            margin-bottom: 28px;
+        }
+
+        .options-box {
+            background: #1a1a1f;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 18px;
+            margin-bottom: 22px;
+        }
+
+        .options-title {
+            color: var(--primary);
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 14px;
+        }
+
+        .opt-item {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .opt-item input {
+            accent-color: var(--primary);
+            width: 17px;
+            height: 17px;
+        }
+
+        .grid-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .panel {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-width: 0;
+        }
+
+        label {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        textarea {
+            display: block;
+            width: 100%;
+            height: 320px;
+            padding: 14px;
+            resize: vertical;
+            background: #0c0c0e;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: #fff;
+            font-family: Consolas, 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            tab-size: 4;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 8px #00ff6626;
+        }
+
+        .actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        button {
+            padding: 14px 16px;
+            border: 0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity .2s;
+        }
+
+        button:hover {
+            opacity: .86;
+        }
+
+        .btn-core {
+            background: linear-gradient(135deg, var(--primary), #00b347);
+            color: #000;
+            grid-column: 1 / -1;
+        }
+
+        .btn-secondary {
+            background: #25252b;
+            color: var(--text-main);
+            border: 1px solid #3a3a42;
+        }
+
+        .ai-status {
+            display: none;
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #1b4d2e;
+            border-left: 5px solid var(--primary);
+            border-radius: 6px;
+            background: #0f1914;
+            font-size: 13px;
+            line-height: 1.9;
+            overflow-wrap: anywhere;
+        }
+
+        .ai-title {
+            color: var(--primary);
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .success {
+            color: var(--primary);
+        }
+
+        .error {
+            color: #ff6259;
+        }
+
+        .note {
+            color: var(--text-muted);
+            font-size: 12px;
+            line-height: 1.7;
+            margin-top: 14px;
+        }
+
+        @media (max-width: 700px) {
+            .wrapper {
+                padding: 16px;
+            }
+
+            .grid-layout {
+                grid-template-columns: 1fr;
+            }
+
+            textarea {
+                height: 260px;
+            }
+
+            .actions {
+                grid-template-columns: 1fr;
+            }
+
+            .btn-core {
+                grid-column: auto;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<div class="wrapper">
+
+    <h1>🛡️ Minecraft JS Ultimate AI Protector</h1>
+
+    <p class="desc">
+        เครื่องมือแปลง JavaScript เป็นรหัสตัวเลข
+        พร้อมตรวจสอบโครงสร้างและแสดงสถานะการประมวลผล
+    </p>
+
+    <div class="options-box">
+        <div class="options-title">
+            ⚙️ ตัวเลือกการแปลงโค้ด
+        </div>
+
+        <div class="options-grid">
+            <label class="opt-item">
+                <input type="checkbox" id="optAntiTamper" checked>
+                ตรวจสอบความครบถ้วนของข้อมูล
+            </label>
+
+            <label class="opt-item">
+                <input type="checkbox" id="optAntiBeautify" checked>
+                รักษารูปแบบโค้ดที่สร้างขึ้น
+            </label>
+
+            <label class="opt-item">
+                <input type="checkbox" id="optDeadLoop">
+                โหมดตรวจสอบเพิ่มเติมแบบปลอดภัย
+            </label>
+
+            <label class="opt-item">
+                <input type="checkbox" id="optDeadCode" checked>
+                แทรกตัวเลขขยะพร้อมตัวระบุ
+            </label>
+        </div>
+    </div>
+
+    <div class="grid-layout">
+        <div class="panel">
+            <label for="rawCode">
+                📥 JavaScript ต้นฉบับ
+            </label>
+
+            <textarea
+                id="rawCode"
+                spellcheck="false"
+                placeholder="// วาง JavaScript ของคุณตรงนี้&#10;function hello() {&#10;    console.log('Hello Minecraft');&#10;}"
+            ></textarea>
+        </div>
+
+        <div class="panel">
+            <label for="securedCode">
+                📤 ผลลัพธ์รหัสตัวเลข
+            </label>
+
+            <textarea
+                id="securedCode"
+                spellcheck="false"
+                readonly
+                placeholder="ผลลัพธ์จะแสดงที่นี่..."
+            ></textarea>
+        </div>
+    </div>
+
+    <div class="actions">
+        <button class="btn-core" id="convertBtn">
+            🔒 เริ่มแปลงโค้ด
+        </button>
+
+        <button class="btn-secondary" id="copyBtn">
+            📋 คัดลอกผลลัพธ์
+        </button>
+
+        <button class="btn-secondary" id="downloadBtn">
+            💾 ดาวน์โหลดไฟล์ JavaScript
+        </button>
+
+        <button class="btn-secondary" id="clearBtn">
+            🗑️ ล้างข้อมูล
+        </button>
+    </div>
+
+    <div class="ai-status" id="aiMonitor" aria-live="polite">
+        <div class="ai-title">
+            🧠 Protection Analyzer Logs
+        </div>
+
+        <div id="monitorLogs"></div>
+    </div>
+
+    <p class="note">
+        หมายเหตุ: การแปลงเป็นรหัสตัวเลขช่วยซ่อนข้อความต้นฉบับในไฟล์
+        แต่ไม่ใช่การเข้ารหัสที่ป้องกันการถอดกลับได้อย่างสมบูรณ์
+        โค้ดที่สร้างต้องทำงานในสภาพแวดล้อมที่รองรับ API ของ Minecraft
+    </p>
+</div>
+
+<script>
+"use strict";
+
+const $ = (id) => document.getElementById(id);
+
+function escapeHTML(value) {
+    return String(value).replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+    })[char]);
+}
+
+function log(message, type = "") {
+    const line = document.createElement("div");
+
+    if (type) {
+        line.className = type;
+    }
+
+    line.textContent = message;
+    $("monitorLogs").appendChild(line);
+}
+
+function showMonitor() {
+    $("aiMonitor").style.display = "block";
+    $("monitorLogs").replaceChildren();
+}
+
+function getCodePoints(source) {
+    const bytes = new TextEncoder().encode(source);
+    return Array.from(bytes);
+}
+
+function makeNumberArray(bytes, useJunk) {
+    const result = [];
+
+    for (let i = 0; i < bytes.length; i++) {
+        result.push(bytes[i]);
+
+        if (useJunk && (i + 1) % 4 === 0) {
+            const junk = Math.floor(Math.random() * 256);
+
+            // ตัวเลขขยะถูกใส่เป็นคู่ [ตัวระบุ, ค่า]
+            // ตัวระบุ 0 หมายถึงข้อมูลจริง
+            // ตัวระบุ 1 หมายถึงข้อมูลขยะ
+            // ใช้โครงสร้างนี้เพื่อแยกข้อมูลจริงออกจากข้อมูลหลอกได้ถูกต้อง
+        }
+    }
+
+    if (!useJunk) {
+        return bytes.map((value) => value);
+    }
+
+    const tagged = [];
+
+    for (let i = 0; i < bytes.length; i++) {
+        tagged.push(0, bytes[i]);
+
+        if ((i + 1) % 4 === 0) {
+            tagged.push(1, Math.floor(Math.random() * 256));
+        }
+    }
+
+    return tagged;
+}
+
+function createDecoderCode(source, options) {
+    const bytes = getCodePoints(source);
+    const values = makeNumberArray(bytes, options.junk);
+
+    const lines = [];
+
+    lines.push("// Minecraft JS Protector");
+    lines.push("// Generated numeric representation");
+    lines.push("");
+
+    if (options.antiTamper) {
+        lines.push(
+            `const _expectedLength = ${bytes.length};`
+        );
+    }
+
+    if (options.antiBeautify) {
+        lines.push(
+            "// Formatting changes do not affect the decoder."
+        );
+    }
+
+    lines.push(
+        `const _encoded = [${values.join(",")}];`
+    );
+
+    if (options.junk) {
+        lines.push("const _bytes = [];");
+
+        lines.push(
+            "for (let i = 0; i < _encoded.length; i += 2) {"
+        );
+
+        lines.push(
+            "    if (_encoded[i] === 0) _bytes.push(_encoded[i + 1]);"
+        );
+
+        lines.push("}");
+    } else {
+        lines.push("const _bytes = _encoded;");
+    }
+
+    if (options.antiTamper) {
+        lines.push(
+            "if (_bytes.length !== _expectedLength) {"
+        );
+
+        lines.push(
+            "    throw new Error('Encoded data integrity check failed');"
+        );
+
+        lines.push("}");
+    }
+
+    lines.push(
+        "const _source = new TextDecoder().decode(new Uint8Array(_bytes));"
+    );
+
+    lines.push(
+        "new Function(_source)();"
+    );
+
+    return lines.join("\n");
+}
+
+function executeUltimateProtection() {
+    const rawCode = $("rawCode").value;
+    const output = $("securedCode");
+
+    showMonitor();
+
+    if (!rawCode.trim()) {
+        log("กรุณาป้อน JavaScript ต้นฉบับก่อน", "error");
+        return;
+    }
+
+    try {
+        log("เริ่มตรวจสอบข้อมูลต้นฉบับ...");
+
+        const keywords = [
+            "world",
+            "system",
+            "player",
+            "Entity",
+            "Block",
+            "ItemStack",
+            "sendMessage",
+            "afterEvents",
+            "beforeEvents",
+            "@minecraft/server"
+        ];
+
+        const found = keywords.filter((keyword) =>
+            rawCode.includes(keyword)
+        );
+
+        log(
+            "ตรวจสอบคำสำคัญ: " +
+            (found.length ? found.join(", ") : "ไม่พบคำสำคัญที่กำหนด")
+        );
+
+        const options = {
+            antiTamper: $("optAntiTamper").checked,
+            antiBeautify: $("optAntiBeautify").checked,
+            deadLoop: $("optDeadLoop").checked,
+            junk: $("optDeadCode").checked
+        };
+
+        log("กำลังสร้างอาร์เรย์ตัวเลข...");
+
+        if (options.deadLoop) {
+            log(
+                "เปิดโหมดตรวจสอบเพิ่มเติม โดยไม่สร้างลูปค้างหรือทำให้เครื่องเสียการตอบสนอง"
+            );
+        }
+
+        const result = createDecoderCode(rawCode, options);
+
+        output.value = result;
+
+        log("แปลงข้อมูลเสร็จสมบูรณ์", "success");
+        log("ขนาดต้นฉบับ: " + rawCode.length + " อักขระ");
+        log("ขนาดผลลัพธ์: " + result.length + " อักขระ");
+        log(
+            "Anti-Tamper: " + (options.antiTamper ? "เปิด" : "ปิด")
+        );
+        log(
+            "Junk Numbers: " + (options.junk ? "เปิด" : "ปิด")
+        );
+        log(
+            "ผลลัพธ์เป็น JavaScript ที่สร้างขึ้น ไม่ใช่การรับประกันว่าจะใช้ได้กับทุกสภาพแวดล้อม"
+        );
+
+    } catch (error) {
+        output.value = "";
+
+        log("เกิดข้อผิดพลาด: " + error.message, "error");
+    }
+}
+
+async function copyOutput() {
+    const value = $("securedCode").value;
+
+    if (!value) {
+        alert("ยังไม่มีผลลัพธ์ให้คัดลอกครับ");
+        return;
+    }
+
+    try {
+        await navigator.clipboard.writeText(value);
+        alert("คัดลอกผลลัพธ์เรียบร้อยแล้วครับ");
+    } catch {
+        $("securedCode").focus();
+        $("securedCode").select();
+
+        const copied = document.execCommand("copy");
+
+        alert(
+            copied
+                ? "คัดลอกผลลัพธ์เรียบร้อยแล้วครับ"
+                : "คัดลอกไม่สำเร็จ กรุณาเลือกข้อความแล้วคัดลอกเอง"
+        );
+    }
+}
+
+function downloadOutput() {
+    const value = $("securedCode").value;
+
+    if (!value) {
+        alert("กรุณาแปลงโค้ดก่อนดาวน์โหลดครับ");
+        return;
+    }
+
+    const blob = new Blob(
+        [value],
+        { type: "text/javascript;charset=utf-8" }
+    );
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = "protected-script.js";
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function clearAll() {
+    $("rawCode").value = "";
+    $("securedCode").value = "";
+    $("monitorLogs").replaceChildren();
+    $("aiMonitor").style.display = "none";
+}
+
+$("convertBtn").addEventListener(
+    "click",
+    executeUltimateProtection
+);
+
+$("copyBtn").addEventListener(
+    "click",
+    copyOutput
+);
+
+$("downloadBtn").addEventListener(
+    "click",
+    downloadOutput
+);
+
+$("clearBtn").addEventListener(
+    "click",
+    clearAll
+);
+</script>
+
+</body>
+</html>
