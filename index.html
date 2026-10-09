@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#060816">
+<title>MINECRAFT NUMERIC CODE FORGE</title>
+
+<style>
+:root {
+  --bg: #050711;
+  --panel: rgba(12, 19, 38, .92);
+  --cyan: #00f5ff;
+  --purple: #a855f7;
+  --pink: #ff3df2;
+  --green: #4dffb5;
+  --text: #e9f7ff;
+  --muted: #8a9ab7;
+  --border: rgba(0, 245, 255, .28);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  background:
+    radial-gradient(ellipse at 10% 0%, #172454 0%, transparent 42%),
+    radial-gradient(ellipse at 95% 20%, #301447 0%, transparent 35%),
+    var(--bg);
+  overflow-x: hidden;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  background-image:
+    linear-gradient(rgba(0,245,255,.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,245,255,.035) 1px, transparent 1px);
+  background-size: 35px 35px;
+  mask-image: linear-gradient(to bottom, black, transparent 90%);
+}
+
+button, textarea, input { font: inherit; }
+
+button { cursor: pointer; }
+
+.container {
+  width: min(1120px, 94%);
+  margin: auto;
+  padding: 22px 0 45px;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+}
+
+.logo {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  color: var(--cyan);
+  font-size: 24px;
+  border: 1px solid var(--cyan);
+  border-radius: 14px;
+  background: rgba(0,245,255,.08);
+  box-shadow: 0 0 22px #00f5ff25, inset 0 0 18px #00f5ff12;
+}
+
+.brand small {
+  display: block;
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: 3px;
+}
+
+.status {
+  padding: 8px 12px;
+  border: 1px solid #4dffb550;
+  border-radius: 30px;
+  color: var(--green);
+  background: #4dffb50a;
+  font-size: 12px;
+}
+
+.status::before {
+  content: "";
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 10px var(--green);
+  animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+  50% { opacity: .3; }
+}
+
+.hero {
+  text-align: center;
+  padding: 22px 0 32px;
+}
+
+.eyebrow {
+  color: var(--cyan);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 4px;
+}
+
+h1 {
+  margin: 13px 0;
+  font-size: clamp(27px, 6vw, 52px);
+  font-weight: 950;
+  line-height: 1.15;
+  letter-spacing: -1px;
+  overflow-wrap: anywhere;
+  background: linear-gradient(100deg, #fff 5%, var(--cyan) 42%, #c69aff 75%, var(--pink));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 20px #00f5ff20);
+}
+
+.hero p {
+  max-width: 650px;
+  margin: auto;
+  color: var(--muted);
+  line-height: 1.8;
+  font-size: 14px;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.stat, .panel, .info-card {
+  background: linear-gradient(145deg, #10182be8, #080d1bea);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 10px 35px #00000022;
+}
+
+.stat {
+  padding: 16px;
+  min-width: 0;
+}
+
+.stat span {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  margin-bottom: 8px;
+}
+
+.stat strong {
+  color: var(--cyan);
+  font-size: clamp(18px, 4vw, 27px);
+  overflow-wrap: anywhere;
+}
+
+.panel {
+  padding: clamp(15px, 3vw, 25px);
+  margin-bottom: 18px;
+  position: relative;
+  overflow: hidden;
+}
+
+.panel::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 8%;
+  right: 8%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--cyan), var(--purple), transparent);
+}
+
+.panel-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 15px;
+}
+
+.panel-heading h2 {
+  margin: 0;
+  font-size: 16px;
+  letter-spacing: .5px;
+}
+
+.panel-heading p {
+  margin: 5px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.tag {
+  padding: 5px 9px;
+  border-radius: 7px;
+  border: 1px solid #a855f74d;
+  background: #a855f713;
+  color: #d7b5ff;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 5px;
+  border-radius: 12px;
+  background: #050914;
+  border: 1px solid #ffffff10;
+}
+
+.tab {
+  padding: 12px 8px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  color: var(--muted);
+  background: transparent;
+  font-weight: 800;
+  font-size: 13px;
+  transition: .2s;
+}
+
+.tab.active {
+  color: var(--cyan);
+  border-color: #00f5ff55;
+  background: #00f5ff12;
+  box-shadow: inset 0 0 18px #00f5ff09, 0 0 15px #00f5ff0b;
+}
+
+.label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin: 15px 0 9px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.label-row small {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+textarea {
+  display: block;
+  width: 100%;
+  min-height: 220px;
+  resize: vertical;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid #283752;
+  background: #030711;
+  color: #dffaff;
+  outline: none;
+  font: 12px/1.8 ui-monospace, SFMono-Regular, Consolas, monospace;
+  tab-size: 4;
+  transition: border-color .2s, box-shadow .2s;
+}
+
+textarea:focus {
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 3px #00f5ff12, 0 0 25px #00f5ff0b;
+}
+
+textarea::placeholder { color: #53627c; }
+
+#output {
+  color: var(--green);
+  min-height: 190px;
+}
+
+.actions {
+  display: flex;
+  gap: 9px;
+  flex-wrap: wrap;
+  margin-top: 15px;
+}
+
+.btn {
+  flex: 1 1 125px;
+  min-height: 44px;
+  padding: 11px 15px;
+  border-radius: 10px;
+  border: 1px solid #30405b;
+  color: var(--text);
+  background: #121b2e;
+  font-size: 12px;
+  font-weight: 800;
+  transition: transform .18s, box-shadow .18s, border-color .18s;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  border-color: var(--cyan);
+  box-shadow: 0 5px 22px #00f5ff16;
+}
+
+.btn.primary {
+  color: #001116;
+  background: linear-gradient(110deg, var(--cyan), #8bfff9);
+  border-color: transparent;
+}
+
+.btn.purple {
+  color: white;
+  background: linear-gradient(110deg, #7136ce, #a855f7);
+  border-color: transparent;
+}
+
+.btn.green {
+  color: #00190f;
+  background: linear-gradient(110deg, #4dffb5, #9dffd9);
+  border-color: transparent;
+}
+
+.btn.danger {
+  color: #ff9eb9;
+  border-color: #ff47734c;
+  background: #ff47730c;
+}
+
+.message {
+  display: none;
+  margin-top: 13px;
+  padding: 12px 14px;
+  border-radius: 9px;
+  border: 1px solid #4dffb540;
+  background: #4dffb50c;
+  color: var(--green);
+  font-size: 12px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.message.show { display: block; }
+
+.message.error {
+  border-color: #ff477355;
+  background: #ff47730c;
+  color: #ff9eb9;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin: 18px 0;
+}
+
+.info-card { padding: 17px; }
+
+.info-card .icon {
+  font-size: 23px;
+  margin-bottom: 10px;
+}
+
+.info-card h3 {
+  margin: 0 0 7px;
+  font-size: 13px;
+}
+
+.info-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.rules {
+  margin: 0;
+  padding-left: 21px;
+  color: #b5c4dc;
+  font-size: 12px;
+  line-height: 2;
+}
+
+.rules li { padding-left: 4px; }
+
+.warning {
+  margin-top: 15px;
+  padding: 14px;
+  border-radius: 10px;
+  border: 1px solid #ffca6650;
+  background: #ffca660a;
+  color: #ffe0a2;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+footer {
+  padding: 20px 0 0;
+  text-align: center;
+  color: #667791;
+  font-size: 11px;
+  line-height: 2;
+}
+
+@media (max-width: 600px) {
+  .container { width: 92%; padding-top: 16px; }
+  .stats { gap: 7px; }
+  .stat { padding: 12px 9px; }
+  .info-grid { grid-template-columns: 1fr; }
+  textarea { min-height: 190px; font-size: 11px; }
+  .hero { padding: 18px 0 25px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+  }
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">⌘</div>
+      <div>
+        NUMERIC FORGE
+        <small>MINECRAFT CODE SYSTEM</small>
+      </div>
+    </div>
+    <div class="status">SYSTEM READY</div>
+  </header>
+
+  <section class="hero">
+    <div class="eyebrow">NEXT-GEN CODE TRANSFORMER</div>
+    <h1>MINECRAFT<br>NUMERIC CODE FORGE</h1>
+    <p>
+      เครื่องมือแปลงโค้ด Minecraft เป็นชุดตัวเลข
+      พร้อมระบบถอดกลับ ตรวจสอบข้อมูล และจัดการไฟล์
+      ในอินเทอร์เฟซ Cyberpunk สุดล้ำ
+    </p>
+  </section>
+
+  <section class="stats">
+    <div class="stat">
+      <span>INPUT CHARACTERS</span>
+      <strong id="inputCount">0</strong>
+    </div>
+    <div class="stat">
+      <span>OUTPUT NUMBERS</span>
+      <strong id="numberCount">0</strong>
+    </div>
+    <div class="stat">
+      <span>DATA BYTES</span>
+      <strong id="byteCount">0</strong>
+    </div>
+  </section>
+
+  <main class="panel">
+    <div class="panel-heading">
+      <div>
+        <h2>⬡ CODE CONVERSION TERMINAL</h2>
+        <p>วางโค้ดของคุณและเลือกโหมดที่ต้องการ</p>
+      </div>
+      <span class="tag">UTF-8 ENGINE</span>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" id="encodeTab" type="button">
+        01 / CODE → NUMBERS
+      </button>
+      <button class="tab" id="decodeTab" type="button">
+        02 / NUMBERS → CODE
+      </button>
+    </div>
+
+    <div class="label-row">
+      <label for="source" id="sourceLabel">SOURCE CODE</label>
+      <small id="sourceHint">JavaScript / JSON / Text</small>
+    </div>
+
+    <textarea
+      id="source"
+      spellcheck="false"
+      autocapitalize="off"
+      autocomplete="off"
+      placeholder="// วางโค้ด Minecraft ของคุณตรงนี้...&#10;import { world } from '@minecraft/server';"
+    ></textarea>
+
+    <div class="actions">
+      <button class="btn" id="exampleBtn" type="button">✦ ตัวอย่าง</button>
+      <button class="btn" id="pasteBtn" type="button">▣ วางข้อความ</button>
+      <button class="btn danger" id="clearBtn" type="button">✕ ล้างข้อมูล</button>
+    </div>
+
+    <div class="actions">
+      <button class="btn primary" id="convertBtn" type="button">
+        ⚡ แปลงเป็นตัวเลข
+      </button>
+      <button class="btn purple" id="swapBtn" type="button">
+        ⇄ สลับโหมด
+      </button>
+    </div>
+
+    <div class="label-row">
+      <label for="output" id="outputLabel">NUMERIC OUTPUT</label>
+      <small id="outputHint">รูปแบบตัวเลข 000–255</small>
+    </div>
+
+    <textarea
+      id="output"
+      spellcheck="false"
+      readonly
+      placeholder="ผลลัพธ์จะแสดงที่นี่..."
+    ></textarea>
+
+    <div class="actions">
+      <button class="btn green" id="copyBtn" type="button">▣ คัดลอกผลลัพธ์</button>
+      <button class="btn" id="downloadBtn" type="button">↓ ดาวน์โหลด TXT</button>
+      <button class="btn" id="useOutputBtn" type="button">↙ ใช้ผลลัพธ์เป็นข้อมูลนำเข้า</button>
+    </div>
+
+    <div class="message" id="message" role="status" aria-live="polite"></div>
+  </main>
+
+  <section class="info-grid">
+    <article class="info-card">
+      <div class="icon">⟡</div>
+      <h3>NUMERIC ENCODER</h3>
+      <p>แปลงข้อมูล UTF-8 แต่ละไบต์เป็นเลขฐานสิบสามหลัก เช่น 065 หรือ 255 โดยเก็บข้อมูลเพื่อถอดกลับได้</p>
+    </article>
+    <article class="info-card">
+      <div class="icon">⌘</div>
+      <h3>CODE RESTORATION</h3>
+      <p>แปลงชุดตัวเลขกลับเป็นข้อความเดิม รวมถึงภาษาไทยและอักขระพิเศษ เมื่อข้อมูลครบถ้วน</p>
+    </article>
+    <article class="info-card">
+      <div class="icon">⬡</div>
+      <h3>LOCAL PROCESSING</h3>
+      <p>ประมวลผลในเบราว์เซอร์ของคุณ ไม่จำเป็นต้องสมัครบัญชีหรือส่งโค้ดไปยังเซิร์ฟเวอร์ของเว็บนี้</p>
+    </article>
+  </section>
+
+  <section class="panel">
+    <div class="panel-heading">
+      <div>
+        <h2>▤ กฎระเบียบการแปลงโค้ด</h2>
+        <p>โปรดอ่านก่อนใช้งานระบบ</p>
+      </div>
+      <span class="tag">PROTOCOL</span>
+    </div>
+
+    <ol class="rules">
+      <li>โหมดแปลงเป็นตัวเลขจะเปลี่ยนข้อความเป็นไบต์ UTF-8 แล้วแสดงแต่ละไบต์เป็นเลข 000–255</li>
+      <li>โหมดถอดกลับต้องใช้ตัวเลขที่คั่นด้วยช่องว่างหรือเครื่องหมายจุลภาค เช่น 105 110 100 101 120</li>
+      <li>ห้ามแก้ไข ลบ หรือสลับลำดับตัวเลข หากต้องการให้ได้ข้อความเดิมอย่างถูกต้อง</li>
+      <li>ข้อมูลตัวเลขที่ไม่ใช่จำนวนเต็มระหว่าง 0–255 จะถูกปฏิเสธ</li>
+      <li>ระบบนี้แปลงข้อความทุกชนิด ไม่ได้ตรวจสอบว่าโค้ด Minecraft นั้นถูกต้องหรือรันได้จริงหรือไม่</li>
+      <li>ควรเก็บไฟล์ต้นฉบับไว้เสมอ ก่อนแปลงหรือแก้ไขข้อมูล</li>
+    </ol>
+
+    <div class="warning">
+      ⚠️ <strong>ข้อควรทราบ:</strong>
+      ชุดตัวเลขที่ได้ไม่ใช่ JavaScript ที่ Minecraft สามารถนำไปรันได้โดยตรง
+      ต้องถอดกลับเป็นโค้ดก่อนนำไปใช้ และวิธีนี้ไม่ใช่การเข้ารหัสลับหรือการป้องกันการแก้ไขโค้ด
+    </div>
+  </section>
+
+  <footer>
+    MINECRAFT NUMERIC CODE FORGE · VERSION 1.0<br>
+    CLIENT-SIDE TOOL · BUILT FOR CODE TRANSFORMATION
+  </footer>
+
+</div>
+
+<script>
+"use strict";
+
+const $ = (id) => document.getElementById(id);
+
+const source = $("source");
+const output = $("output");
+const message = $("message");
+
+let mode = "encode";
+
+const exampleCode = `import { world, system } from "@minecraft/server";
+
+world.afterEvents.playerSpawn.subscribe((event) => {
+    const player = event.player;
+    player.sendMessage("Hello Minecraft!");
+});`;
+
+function showMessage(text, error = false) {
+  message.textContent = text;
+  message.classList.toggle("error", error);
+  message.classList.add("show");
+}
+
+function clearMessage() {
+  message.textContent = "";
+  message.classList.remove("show", "error");
+}
+
+function updateStats() {
+  const inputText = source.value;
+  const outputText = output.value;
+
+  $("inputCount").textContent = inputText.length.toLocaleString();
+
+  const numbers = outputText.trim()
+    ? outputText.trim().split(/[\s,]+/).filter(Boolean)
+    : [];
+
+  $("numberCount").textContent =
+    mode === "encode"
+      ? numbers.length.toLocaleString()
+      : outputText.length.toLocaleString();
+
+  $("byteCount").textContent =
+    new TextEncoder().encode(inputText).length.toLocaleString();
+}
+
+function setMode(nextMode) {
+  mode = nextMode;
+
+  $("encodeTab").classList.toggle("active", mode === "encode");
+  $("decodeTab").classList.toggle("active", mode === "decode");
+
+  $("sourceLabel").textContent =
+    mode === "encode" ? "SOURCE CODE" : "NUMERIC SOURCE";
+
+  $("sourceHint").textContent =
+    mode === "encode" ? "JavaScript / JSON / Text" : "เลข 000–255";
+
+  $("outputLabel").textContent =
+    mode === "encode" ? "NUMERIC OUTPUT" : "RESTORED CODE";
+
+  $("outputHint").textContent =
+    mode === "encode" ? "รูปแบบตัวเลข 000–255" : "ข้อความ UTF-8";
+
+  $("convertBtn").textContent =
+    mode === "encode" ? "⚡ แปลงเป็นตัวเลข" : "⚡ ถอดกลับเป็นโค้ด";
+
+  source.placeholder = mode === "encode"
+    ? "// วางโค้ด Minecraft ของคุณตรงนี้..."
+    : "วางชุดตัวเลข เช่น 105 110 100 101 120";
+
+  output.placeholder = mode === "encode"
+    ? "ผลลัพธ์ตัวเลขจะแสดงที่นี่..."
+    : "โค้ดที่ถอดกลับจะแสดงที่นี่...";
+
+  output.value = "";
+  clearMessage();
+  updateStats();
+}
+
+function encodeText(text) {
+  const bytes = new TextEncoder().encode(text);
+
+  return Array.from(bytes, byte =>
+    String(byte).padStart(3, "0")
+  ).join(" ");
+}
+
+function decodeNumbers(text) {
+  const trimmed = text.trim();
+
+  if (!trimmed) {
+    throw new Error("กรุณาวางชุดตัวเลขก่อนถอดกลับ");
+  }
+
+  const tokens = trimmed.split(/[\s,]+/);
+
+  if (tokens.some(token => !/^\d{1,3}$/.test(token))) {
+    throw new Error(
+      "รูปแบบไม่ถูกต้อง ใช้เฉพาะตัวเลข 0–255 และคั่นด้วยช่องว่างหรือจุลภาค"
+    );
+  }
+
+  const bytes = tokens.map(Number);
+
+  if (bytes.some(number => number < 0 || number > 255)) {
+    throw new Error("พบตัวเลขที่เกินช่วง 0–255");
+  }
+
+  const decoded = new TextDecoder("utf-8", { fatal: true });
+  return decoded.decode(new Uint8Array(bytes));
+}
+
+function convert() {
+  clearMessage();
+
+  try {
+    if (mode === "encode") {
+      if (!source.value.length) {
+        throw new Error("กรุณาวางโค้ดที่ต้องการแปลงก่อน");
+      }
+
+      output.value = encodeText(source.value);
+      showMessage("✓ แปลงเป็นตัวเลขสำเร็จ สามารถคัดลอกหรือดาวน์โหลดได้");
+    } else {
+      output.value = decodeNumbers(source.value);
+      showMessage("✓ ถอดรหัสตัวเลขกลับเป็นข้อความสำเร็จ");
+    }
+
+    updateStats();
+  } catch (error) {
+    output.value = "";
+    updateStats();
+    showMessage(error.message || "เกิดข้อผิดพลาดในการแปลงข้อมูล", true);
+  }
+}
+
+async function copyOutput() {
+  if (!output.value) {
+    showMessage("ยังไม่มีผลลัพธ์ให้คัดลอก", true);
+    return;
+  }
+
+  try {
+    await navigator.clipboard.writeText(output.value);
+    showMessage("✓ คัดลอกผลลัพธ์แล้ว");
+  } catch {
+    output.focus();
+    output.select();
+
+    try {
+      const success = document.execCommand("copy");
+      showMessage(
+        success
+          ? "✓ คัดลอกผลลัพธ์แล้ว"
+          : "คัดลอกไม่สำเร็จ กรุณาเลือกข้อความแล้วคัดลอกด้วยตนเอง",
+        !success
+      );
+    } catch {
+      showMessage("คัดลอกไม่สำเร็จ กรุณาเลือกข้อความแล้วคัดลอกด้วยตนเอง", true);
+    }
+  }
+}
+
+async function pasteInput() {
+  try {
+    if (!navigator.clipboard || !navigator.clipboard.readText) {
+      throw new Error("เบราว์เซอร์ไม่อนุญาตให้อ่านคลิปบอร์ด");
+    }
+
+    source.value = await navigator.clipboard.readText();
+    clearMessage();
+    updateStats();
+    source.focus();
+  } catch {
+    showMessage(
+      "วางอัตโนมัติไม่ได้ กรุณาแตะช่องข้อความค้างไว้แล้วเลือก วาง",
+      true
+    );
+  }
+}
+
+function downloadOutput() {
+  if (!output.value) {
+    showMessage("ไม่มีผลลัพธ์ให้ดาวน์โหลด", true);
+    return;
+  }
+
+  const blob = new Blob(
+    [output.value],
+    { type: "text/plain;charset=utf-8" }
+  );
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = mode === "encode"
+    ? "minecraft-numeric-code.txt"
+    : "minecraft-restored-code.txt";
+
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  showMessage("✓ สร้างไฟล์ข้อความสำหรับดาวน์โหลดแล้ว");
+}
+
+$("encodeTab").addEventListener("click", () => setMode("encode"));
+$("decodeTab").addEventListener("click", () => setMode("decode"));
+
+$("convertBtn").addEventListener("click", convert);
+
+$("swapBtn").addEventListener("click", () => {
+  setMode(mode === "encode" ? "decode" : "encode");
+});
+
+$("exampleBtn").addEventListener("click", () => {
+  source.value = mode === "encode"
+    ? exampleCode
+    : encodeText(exampleCode);
+
+  output.value = "";
+  clearMessage();
+  updateStats();
+  showMessage("✓ ใส่ข้อมูลตัวอย่างแล้ว");
+});
+
+$("pasteBtn").addEventListener("click", pasteInput);
+
+$("clearBtn").addEventListener("click", () => {
+  source.value = "";
+  output.value = "";
+  clearMessage();
+  updateStats();
+  source.focus();
+});
+
+$("copyBtn").addEventListener("click", copyOutput);
+$("downloadBtn").addEventListener("click", downloadOutput);
+
+$("useOutputBtn").addEventListener("click", () => {
+  if (!output.value) {
+    showMessage("ยังไม่มีผลลัพธ์ให้นำไปใช้", true);
+    return;
+  }
+
+  source.value = output.value;
+  output.value = "";
+
+  clearMessage();
+  updateStats();
+  source.focus();
+
+  showMessage("✓ ย้ายผลลัพธ์มาเป็นข้อมูลนำเข้าแล้ว");
+});
+
+source.addEventListener("input", () => {
+  clearMessage();
+  updateStats();
+});
+
+updateStats();
+</script>
+</body>
+</html>
