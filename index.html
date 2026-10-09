@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minecraft Add-on System Key Obfuscator AI Core</title>
+
+    <style>
+        :root {
+            --bg-color: #050508;
+            --panel-bg: rgba(10, 11, 18, 0.92);
+            --primary: #00f0ff;
+            --secondary: #ff007f;
+            --text: #e0e6ed;
+            --border: #1f2438;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: var(--bg-color);
+            color: var(--text);
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        canvas {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.15;
+            pointer-events: none;
+        }
+
+        header {
+            padding: 20px;
+            text-align: center;
+            background: linear-gradient(
+                180deg,
+                rgba(0,240,255,0.1),
+                transparent
+            );
+            border-bottom: 1px solid rgba(0,240,255,0.2);
+        }
+
+        header h1 {
+            color: var(--primary);
+            font-size: clamp(1.1rem, 4vw, 2rem);
+            letter-spacing: 1px;
+            text-shadow: 0 0 10px rgba(0,240,255,0.5);
+        }
+
+        header p {
+            color: #8a99ad;
+            font-size: 0.9rem;
+            margin-top: 8px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 20px auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: 320px minmax(0, 1fr);
+            gap: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.37);
+            min-width: 0;
+        }
+
+        .panel-title {
+            color: var(--secondary);
+            font-size: 1rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(255,0,127,0.2);
+            padding-bottom: 8px;
+        }
+
+        .info-card {
+            background: rgba(255,0,127,0.05);
+            border: 1px solid rgba(255,0,127,0.2);
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            color: #fca5a5;
+            line-height: 1.7;
+            margin-bottom: 15px;
+        }
+
+        .workspace {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        .editors-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .editors-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .editor-container {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            background: rgba(20,22,37,0.95);
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px 8px 0 0;
+            font-size: 0.8rem;
+            color: var(--primary);
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 360px;
+            height: 480px;
+            background: rgba(10,11,18,0.98);
+            border: 1px solid var(--border);
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            color: #00ff66;
+            font-family: Consolas, 'Courier New', monospace;
+            padding: 15px;
+            resize: vertical;
+            outline: none;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            tab-size: 4;
+        }
+
+        textarea:focus {
+            border-color: var(--primary);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--secondary), #b0005d);
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.9rem;
+            transition: 0.2s;
+            width: 100%;
+            box-shadow: 0 4px 15px rgba(255,0,127,0.2);
+        }
+
+        .btn:hover {
+            filter: brightness(1.15);
+            transform: translateY(-1px);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #1f2438, #0d101d);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 7px 10px;
+            font-size: 0.78rem;
+            width: auto;
+            box-shadow: none;
+        }
+
+        .btn-download {
+            background: var(--primary);
+            color: #000;
+        }
+
+        .button-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .terminal {
+            background: #020204;
+            border: 1px solid #1a1a24;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: Consolas, 'Courier New', monospace;
+            font-size: 0.8rem;
+            height: 150px;
+            overflow-y: auto;
+            overflow-wrap: anywhere;
+            color: #8a99ad;
+        }
+
+        .terminal-line {
+            margin-bottom: 6px;
+            line-height: 1.5;
+        }
+
+        .terminal-success { color: #00ff66; }
+        .terminal-info { color: var(--primary); }
+        .terminal-warn { color: #ffaa00; }
+
+        .hint {
+            color: #8a99ad;
+            font-size: 0.8rem;
+            line-height: 1.6;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="matrixCanvas"></canvas>
+
+    <header>
+        <h1>⚡ MINECRAFT ADD-ON SYSTEM KEY OBFUSCATOR ⚡</h1>
+        <p>
+            เครื่องมือแปลงข้อความ JSON เป็น Unicode Escape
+            พร้อมจัดรูปแบบหลายบรรทัด
+        </p>
+    </header>
+
+    <main class="container">
+        <aside class="panel">
+            <div class="panel-title">🤖 QUANTUM MATRIX CORE</div>
+
+            <div class="info-card">
+                <strong>🔥 ระบบแปลงโค้ด</strong><br>
+                • ตรวจสอบ JSON ก่อนแปลง<br>
+                • เลือกแปลงข้อความหรือค่าทั้งหมด<br>
+                • คงชื่อคีย์ JSON ไว้ตามเดิม<br>
+                • จัดรูปแบบหลายบรรทัด<br>
+                • คัดลอกและดาวน์โหลดผลลัพธ์ได้<br><br>
+                <strong>หมายเหตุ:</strong>
+                Unicode Escape เป็นเพียงการเปลี่ยนรูปแบบข้อความ
+                ไม่ใช่การเข้ารหัสที่ปลอดภัย และไม่รับประกันว่า
+                Minecraft จะรองรับแอดออนที่แปลงแล้วทุกชนิด
+            </div>
+
+            <label for="modeSelect">เลือกรูปแบบการแปลง</label>
+
+            <select id="modeSelect"
+                style="width:100%; margin:10px 0 15px; padding:12px;
+                background:#0a0b12; color:#e0e6ed;
+                border:1px solid #1f2438; border-radius:6px;">
+                <option value="values">แปลงค่าข้อความเท่านั้น (แนะนำ)</option>
+                <option value="all">แปลงค่าข้อความและข้อความใน Array</option>
+            </select>
+
+            <button class="btn" id="encryptButton" type="button">
+                ⚡ เริ่มแปลงโค้ด
+            </button>
+
+            <button class="btn btn-secondary" id="clearButton"
+                type="button" style="width:100%; margin-top:10px;">
+                🗑️ ล้างข้อมูล
+            </button>
+
+            <p class="hint">
+                คีย์อย่าง format_version, minecraft:item และ components
+                จะยังคงชื่อเดิม เพื่อไม่ให้โครงสร้าง JSON เสียหาย
+            </p>
+        </aside>
+
+        <section class="workspace">
+            <div class="editors-grid">
+                <div class="editor-container">
+                    <div class="editor-header">
+                        <span>ORIGINAL CODE (.JSON)</span>
+                        <button class="btn btn-secondary" id="sampleButton"
+                            type="button">โหลดตัวอย่าง</button>
+                    </div>
+
+                    <textarea id="sourceInput"
+                        spellcheck="false"
+                        autocapitalize="off"
+                        placeholder="วางโค้ด JSON ของแอดออนที่นี่..."></textarea>
+                </div>
+
+                <div class="editor-container">
+                    <div class="editor-header">
+                        <span>OUTPUT (.JSON)</span>
+                        <div class="button-row">
+                            <button class="btn btn-secondary" id="copyButton"
+                                type="button">📋 Copy</button>
+                            <button class="btn btn-secondary btn-download"
+                                id="downloadButton" type="button">
+                                💾 Download
+                            </button>
+                        </div>
+                    </div>
+
+                    <textarea id="resultOutput"
+                        spellcheck="false"
+                        readonly
+                        placeholder="ผลลัพธ์จะแสดงที่นี่..."></textarea>
+                </div>
+            </div>
+
+            <section class="panel">
+                <div class="panel-title">📡 ENGINE LOGGING</div>
+                <div class="terminal" id="terminalLog" role="log"
+                    aria-live="polite">
+                    <div class="terminal-line terminal-info">
+                        [SYSTEM] ระบบพร้อมใช้งาน
+                    </div>
+                </div>
+            </section>
+        </section>
+    </main>
+
+    <script>
+    "use strict";
+
+    // ==============================
+    // DOM
+    // ==============================
+    const sourceInput = document.getElementById("sourceInput");
+    const resultOutput = document.getElementById("resultOutput");
+    const terminalLog = document.getElementById("terminalLog");
+    const modeSelect = document.getElementById("modeSelect");
+
+    // ==============================
+    // Matrix Background
+    // ==============================
+    const canvas = document.getElementById("matrixCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const alphabet = "0123456789ABCDEF";
+    const fontSize = 16;
+    let rainDrops = [];
+    let matrixTimer = null;
+
+    function resizeCanvas() {
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+        canvas.width = Math.floor(window.innerWidth * dpr);
+        canvas.height = Math.floor(window.innerHeight * dpr);
+        canvas.style.width = window.innerWidth + "px";
+        canvas.style.height = window.innerHeight + "px";
+
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        const columns = Math.ceil(window.innerWidth / fontSize);
+        rainDrops = Array.from({ length: columns }, () =>
+            Math.random() * -50
+        );
+    }
+
+    function drawMatrix() {
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+
+        ctx.fillStyle = "rgba(5, 5, 8, 0.12)";
+        ctx.fillRect(0, 0, width, height);
+
+        ctx.fillStyle = "#00f0ff";
+        ctx.font = fontSize + "px monospace";
+
+        for (let i = 0; i < rainDrops.length; i++) {
+            const character =
+                alphabet[Math.floor(Math.random() * alphabet.length)];
+
+            ctx.fillText(character, i * fontSize, rainDrops[i] * fontSize);
+
+            if (
+                rainDrops[i] * fontSize > height &&
+                Math.random() > 0.975
+            ) {
+                rainDrops[i] = 0;
+            }
+
+            rainDrops[i]++;
+        }
+    }
+
+    resizeCanvas();
+    window.addEventListener("resize", resizeCanvas);
+
+    if (matrixTimer !== null) {
+        clearInterval(matrixTimer);
+    }
+
+    matrixTimer = setInterval(drawMatrix, 50);
+
+    // ==============================
+    // Logging
+    // ==============================
+    function log(message, type = "info") {
+        const line = document.createElement("div");
+
+        line.className = "terminal-line terminal-" + type;
+        line.textContent =
+            "[" + new Date().toLocaleTimeString() + "] " + message;
+
+        terminalLog.appendChild(line);
+
+        // จำกัดจำนวนบรรทัดเพื่อไม่ให้หน้าเว็บหนัก
+        while (terminalLog.children.length > 80) {
+            terminalLog.removeChild(terminalLog.firstChild);
+        }
+
+        terminalLog.scrollTop = terminalLog.scrollHeight;
+    }
+
+    // ==============================
+    // Sample JSON
+    // ==============================
+    function loadSample() {
+        const sample = {
+            "format_version": "1.20.10",
+            "minecraft:item": {
+                "description": {
+                    "identifier": "custom:god_sword"
+                },
+                "components": {
+                    "minecraft:display_name": {
+                        "value": "ดาบมหาเทพเจ้าสายฟ้า"
+                    },
+                    "minecraft:damage": 9999,
+                    "minecraft:lore": [
+                        "ไอเทมตัวอย่างสำหรับทดสอบระบบ"
+                    ]
+                }
+            }
+        };
+
+        sourceInput.value = JSON.stringify(sample, null, 4);
+        resultOutput.value = "";
+
+        log("โหลด JSON ตัวอย่างสำเร็จ", "success");
+    }
+
+    // ==============================
+    // Unicode Escape
+    // ==============================
+    function encodeUnicode(text) {
+        let result = "";
+
+        // for...of อ่านอักขระ Unicode ได้ดีกว่า split("")
+        for (const character of text) {
+            const codePoint = character.codePointAt(0);
+
+            if (codePoint <= 0xFFFF) {
+                result += "\\u" +
+                    codePoint.toString(16).padStart(4, "0");
+            } else {
+                // แปลงอักขระนอก BMP เป็น UTF-16 surrogate pair
+                const adjusted = codePoint - 0x10000;
+                const high = 0xD800 + (adjusted >> 10);
+                const low = 0xDC00 + (adjusted & 0x3FF);
+
+                result += "\\u" +
+                    high.toString(16).padStart(4, "0");
+                result += "\\u" +
+                    low.toString(16).padStart(4, "0");
+            }
+        }
+
+        return result;
+    }
+
+    // ==============================
+    // Transform JSON
+    // ==============================
+    function transformValues(value, mode) {
+        if (typeof value === "string") {
+            return encodeUnicode(value);
+        }
+
+        if (Array.isArray(value)) {
+            return value.map(item => transformValues(item, mode));
+        }
+
+        if (value !== null && typeof value === "object") {
+            const result = {};
+
+            for (const key of Object.keys(value)) {
+                // คงคีย์ JSON เดิมไว้เพื่อรักษา schema
+                result[key] = transformValues(value[key], mode);
+            }
+
+            return result;
+        }
+
+        // คงตัวเลข Boolean และ null เดิม
+        return value;
+    }
+
+    function encryptPayload() {
+        const input = sourceInput.value.trim();
+
+        if (!input) {
+            log("กรุณาวาง JSON ในช่องต้นฉบับก่อน", "warn");
+            sourceInput.focus();
+            return;
+        }
+
+        try {
+            log("กำลังตรวจสอบรูปแบบ JSON...", "info");
+
+            const parsed = JSON.parse(input);
+            const mode = modeSelect.value;
+
+            const transformed = transformValues(parsed, mode);
+            const output = JSON.stringify(transformed, null, 4);
+
+            // ตรวจสอบผลลัพธ์อีกครั้งก่อนแสดง
+            JSON.parse(output);
+
+            resultOutput.value = output;
+
+            log("ตรวจสอบ JSON สำเร็จ", "success");
+            log("แปลงข้อความเป็น Unicode Escape สำเร็จ", "success");
+            log("คงคีย์และโครงสร้าง JSON เดิมไว้", "info");
+            log("พร้อมคัดลอกหรือดาวน์โหลดไฟล์", "success");
+
+        } catch (error) {
+            resultOutput.value = "";
+
+            log(
+                "JSON Error: " + error.message,
+                "warn"
+            );
+
+            log(
+                "ตรวจสอบเครื่องหมายคำพูด คอมมา และวงเล็บ",
+                "warn"
+            );
+        }
+    }
+
+    // ==============================
+    // Copy Output
+    // ==============================
+    async function copyResult() {
+        const content = resultOutput.value;
+
+        if (!content) {
+            log("ไม่มีผลลัพธ์ให้คัดลอก กรุณาแปลงโค้ดก่อน", "warn");
+            return;
+        }
+
+        try {
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(content);
+            } else {
+                resultOutput.focus();
+                resultOutput.select();
+
+                const copied = document.execCommand("copy");
+
+                if (!copied) {
+                    throw new Error("Browser ไม่อนุญาตให้คัดลอก");
+                }
+            }
+
+            log("คัดลอกผลลัพธ์สำเร็จ", "success");
+
+        } catch (error) {
+            resultOutput.focus();
+            resultOutput.select();
+
+            log(
+                "คัดลอกอัตโนมัติไม่ได้ กรุณากดค้างในช่องผลลัพธ์แล้วเลือกคัดลอก",
+                "warn"
+            );
+        }
+    }
+
+    // ==============================
+    // Download JSON
+    // ==============================
+    function downloadJson() {
+        const content = resultOutput.value;
+
+        if (!content) {
+            log("ไม่มีข้อมูลให้ดาวน์โหลด กรุณาแปลงโค้ดก่อน", "warn");
+            return;
+        }
+
+        try {
+            // ป้องกันการดาวน์โหลด JSON ที่ไม่ถูกต้อง
+            JSON.parse(content);
+
+            const blob = new Blob(
+                [content],
+                { type: "application/json;charset=utf-8" }
+            );
+
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+
+            link.href = url;
+            link.download = "addon_all_keys_protected.json";
+
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+
+            // หน่วงเวลาเล็กน้อยก่อนคืนทรัพยากร
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+            log("สร้างไฟล์ JSON สำหรับดาวน์โหลดแล้ว", "success");
+
+        } catch (error) {
+            log("ไม่สามารถสร้างไฟล์ได้: " + error.message, "warn");
+        }
+    }
+
+    // ==============================
+    // Clear
+    // ==============================
+    function clearAll() {
+        sourceInput.value = "";
+        resultOutput.value = "";
+
+        log("ล้างข้อมูลในช่องทั้งสองแล้ว", "info");
+    }
+
+    // ==============================
+    // Button Events
+    // ==============================
+    document.getElementById("encryptButton")
+        .addEventListener("click", encryptPayload);
+
+    document.getElementById("sampleButton")
+        .addEventListener("click", loadSample);
+
+    document.getElementById("copyButton")
+        .addEventListener("click", copyResult);
+
+    document.getElementById("downloadButton")
+        .addEventListener("click", downloadJson);
+
+    document.getElementById("clearButton")
+        .addEventListener("click", clearAll);
+
+    log("ระบบพร้อมใช้งาน", "success");
+    </script>
+</body>
+</html>
