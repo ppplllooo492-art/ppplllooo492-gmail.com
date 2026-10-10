@@ -1,0 +1,843 @@
+
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CyberCraft 3D Neo-Modeler V2</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;700;900&family=Orbitron:wght@400;700;900&display=swap');
+
+* { box-sizing:border-box; }
+body {
+    margin:0;
+    font-family:'Prompt',sans-serif;
+    background:#030008;
+    color:#f3f4f6;
+    overflow:hidden;
+}
+.cyber-glow { text-shadow:0 0 10px #00f3ff88; }
+.glass-panel {
+    background:rgba(10,5,20,.92);
+    border-color:rgba(0,243,255,.25);
+}
+button { touch-action:manipulation; }
+button:active { transform:scale(.98); }
+#canvas-container {
+    position:absolute;
+    inset:0;
+    overflow:hidden;
+    background:radial-gradient(ellipse at center,#190b30,#04010a 75%);
+}
+#canvas-container canvas {
+    display:block;
+    width:100%;
+    height:100%;
+    touch-action:none;
+}
+#left-panel,#right-panel {
+    position:absolute;
+    top:0;
+    bottom:0;
+    z-index:5;
+    overflow-y:auto;
+    width:245px;
+    padding:14px;
+}
+#left-panel { left:0; }
+#right-panel { right:0; width:260px; }
+header { position:relative; z-index:10; }
+#mobile-toggle {
+    display:none;
+}
+#toast {
+    position:absolute;
+    z-index:20;
+    bottom:18px;
+    left:50%;
+    transform:translateX(-50%);
+    background:#100b20;
+    border:1px solid #00f3ff88;
+    border-radius:8px;
+    padding:9px 16px;
+    font-size:12px;
+    pointer-events:none;
+    display:none;
+}
+@media(max-width:800px) {
+    header { height:auto!important; min-height:60px; padding:8px!important; flex-wrap:wrap; gap:8px; }
+    header h1 { font-size:13px!important; }
+    .export-buttons { width:100%; display:flex; gap:5px; }
+    .export-buttons button { flex:1; padding:8px 3px!important; font-size:10px!important; }
+    #left-panel,#right-panel { width:min(78vw,270px); top:0; bottom:0; }
+    #left-panel { transform:translateX(-110%); transition:transform .2s; }
+    #right-panel { transform:translateX(110%); transition:transform .2s; }
+    #left-panel.open,#right-panel.open { transform:translateX(0); }
+    #mobile-toggle { display:block; }
+    #canvas-container { top:0; }
+}
+</style>
+</head>
+
+<body class="h-screen w-screen flex flex-col">
+
+<header class="h-16 glass-panel border-b flex items-center justify-between px-4 shrink-0">
+    <div class="flex items-center gap-2">
+        <div class="w-3 h-3 bg-cyan-400 rounded-sm"></div>
+        <h1 class="font-black text-xl text-cyan-400 cyber-glow">
+            CYBERCRAFT 3D
+            <span class="text-xs text-fuchsia-400">V2.0</span>
+        </h1>
+    </div>
+
+    <div class="flex items-center gap-2 export-buttons">
+        <button onclick="exportTXT()" class="px-3 py-2 bg-cyan-700 rounded text-xs font-bold">
+            💾 EXPORT TXT
+        </button>
+        <button onclick="exportMCJSON()" class="px-3 py-2 bg-fuchsia-700 rounded text-xs font-bold">
+            📦 EXPORT JSON
+        </button>
+        <button onclick="exportJavaMod()" class="px-3 py-2 bg-amber-700 rounded text-xs font-bold">
+            ⚙️ EXPORT JAVA
+        </button>
+    </div>
+</header>
+
+<div class="flex-1 relative overflow-hidden">
+
+    <main id="canvas-container"></main>
+
+    <aside id="left-panel" class="glass-panel border-r">
+        <div class="flex gap-2 mb-5">
+            <button id="mobile-toggle" onclick="togglePanel('left-panel')"
+                class="bg-cyan-900 rounded px-3 py-2 text-xs">☰</button>
+            <h2 class="text-xs font-bold text-cyan-400 tracking-widest py-2">
+                // BRUSH MODE
+            </h2>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 mb-6">
+            <button id="btn-mode-add" onclick="setMode('add')"
+                class="p-2 rounded text-xs font-bold bg-cyan-900 border border-cyan-400">
+                🟩 วางบล็อก
+            </button>
+            <button id="btn-mode-erase" onclick="setMode('erase')"
+                class="p-2 rounded text-xs font-bold border border-gray-600">
+                🟥 ลบบล็อก
+            </button>
+        </div>
+
+        <h2 class="text-xs text-cyan-400 font-bold mb-3">// COLOR PALETTE</h2>
+        <div class="flex gap-3 items-center bg-black/40 p-2 rounded">
+            <input type="color" id="block-color" value="#00f3ff"
+                onchange="updateColor(this.value)" class="w-12 h-12">
+            <div>
+                <div class="text-xs text-gray-400">สีบล็อก</div>
+                <div id="color-hex" class="text-sm font-bold">#00F3FF</div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-5 gap-2 mt-3 mb-6">
+            <button onclick="updateColor('#00f3ff')" class="h-7 rounded border border-white/20" style="background:#00f3ff"></button>
+            <button onclick="updateColor('#ff0055')" class="h-7 rounded border border-white/20" style="background:#ff0055"></button>
+            <button onclick="updateColor('#00ff66')" class="h-7 rounded border border-white/20" style="background:#00ff66"></button>
+            <button onclick="updateColor('#ffaa00')" class="h-7 rounded border border-white/20" style="background:#ffaa00"></button>
+            <button onclick="updateColor('#ffffff')" class="h-7 rounded border border-white/20" style="background:#ffffff"></button>
+        </div>
+
+        <div class="text-xs text-gray-400 mb-2">ACTIVE MODE</div>
+        <div id="status-mode" class="text-cyan-400 font-bold text-sm mb-5">ADD VOXEL</div>
+
+        <button onclick="clearCanvas()"
+            class="w-full p-3 bg-red-950 border border-red-700 text-red-400 rounded text-xs font-bold mb-4">
+            🗑️ CLEAR CANVAS
+        </button>
+
+        <div class="text-xs text-gray-400 leading-6">
+            <b class="text-cyan-400">CONTROLS</b><br>
+            คลิกซ้าย: วาง/ลบบล็อก<br>
+            คลิกขวาลาก: หมุนกล้อง<br>
+            ล้อเมาส์: ซูม<br>
+            Shift + ลาก: เลื่อนกล้อง<br>
+            มือถือ: แตะเพื่อวางบล็อก
+        </div>
+    </aside>
+
+    <aside id="right-panel" class="glass-panel border-l">
+        <div class="flex items-center justify-between mb-3">
+            <h2 class="text-xs font-bold text-fuchsia-400 tracking-widest">
+                // MINECRAFT MOBS
+            </h2>
+            <button id="mobile-toggle" onclick="togglePanel('right-panel')"
+                class="bg-fuchsia-950 rounded px-2 py-1 text-xs">✕</button>
+        </div>
+
+        <p class="text-[11px] text-gray-400 mb-4">
+            เลือกโมเดลเพื่อสร้างตัวละครแบบบล็อก แล้วแก้ไขต่อบนกระดาน 3D ได้
+        </p>
+
+        <div id="entity-list" class="space-y-2"></div>
+
+        <div class="mt-5 text-[11px] text-gray-500">
+            โมเดลเหล่านี้สร้างจากกล่อง voxel สีพื้นเพื่อเป็นต้นแบบ ไม่ใช่โมเดลสกินหรือพื้นผิวต้นฉบับจากเกม
+        </div>
+    </aside>
+
+    <div id="toast"></div>
+</div>
+
+<script>
+"use strict";
+
+// ========================================
+// CORE
+// ========================================
+
+let scene, camera, renderer, controls;
+let raycaster, mouse, planeGrid, rollOverMesh;
+let currentMode = "add";
+let currentHexColor = "#00f3ff";
+const voxels = [];
+const cubeGeo = new THREE.BoxGeometry(1, 1, 1);
+
+const $ = id => document.getElementById(id);
+
+function notify(message) {
+    const el = $("toast");
+    el.textContent = message;
+    el.style.display = "block";
+    clearTimeout(notify.timer);
+    notify.timer = setTimeout(() => el.style.display = "none", 2200);
+}
+
+function init() {
+    const container = $("canvas-container");
+
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x080315);
+    scene.fog = new THREE.FogExp2(0x080315, 0.008);
+
+    camera = new THREE.PerspectiveCamera(
+        45, container.clientWidth / container.clientHeight, 0.1, 1500
+    );
+    camera.position.set(25, 23, 30);
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+
+    const light = new THREE.DirectionalLight(0xffffff, 1.2);
+    light.position.set(15, 30, 20);
+    scene.add(light);
+
+    const cyanLight = new THREE.PointLight(0x00f3ff, 1.5, 100);
+    cyanLight.position.set(10, 15, 10);
+    scene.add(cyanLight);
+
+    const pinkLight = new THREE.PointLight(0xff0055, 1.1, 100);
+    pinkLight.position.set(-15, 10, -10);
+    scene.add(pinkLight);
+
+    const grid = new THREE.GridHelper(50, 50, 0x00f3ff, 0x35204c);
+    grid.position.y = -0.5;
+    grid.material.transparent = true;
+    grid.material.opacity = 0.55;
+    scene.add(grid);
+
+    const planeGeo = new THREE.PlaneGeometry(50, 50);
+    planeGeo.rotateX(-Math.PI / 2);
+    planeGrid = new THREE.Mesh(
+        planeGeo, new THREE.MeshBasicMaterial({visible:false, side:THREE.DoubleSide})
+    );
+    planeGrid.position.y = -0.5;
+    scene.add(planeGrid);
+
+    rollOverMesh = new THREE.Mesh(
+        cubeGeo,
+        new THREE.MeshBasicMaterial({
+            color:0x00f3ff, wireframe:true, transparent:true, opacity:0.8
+        })
+    );
+    scene.add(rollOverMesh);
+
+    raycaster = new THREE.Raycaster();
+    mouse = new THREE.Vector2();
+
+    renderer = new THREE.WebGLRenderer({antialias:true});
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    container.appendChild(renderer.domElement);
+
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.target.set(0, 5, 0);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.08;
+    controls.mouseButtons.LEFT = THREE.MOUSE.ROTATE;
+    controls.mouseButtons.MIDDLE = THREE.MOUSE.DOLLY;
+    controls.mouseButtons.RIGHT = THREE.MOUSE.PAN;
+    controls.update();
+
+    renderer.domElement.addEventListener("pointermove", onPointerMove);
+    renderer.domElement.addEventListener("pointerdown", onPointerDown);
+    renderer.domElement.addEventListener("contextmenu", e => e.preventDefault());
+    window.addEventListener("resize", onWindowResize);
+
+    animate();
+}
+
+function onWindowResize() {
+    const container = $("canvas-container");
+    camera.aspect = container.clientWidth / container.clientHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(container.clientWidth, container.clientHeight);
+}
+
+function getIntersection(event) {
+    const rect = renderer.domElement.getBoundingClientRect();
+    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+    raycaster.setFromCamera(mouse, camera);
+    return raycaster.intersectObjects([...voxels, planeGrid], false);
+}
+
+function onPointerMove(event) {
+    if (event.pointerType === "touch" && event.buttons === 0) return;
+
+    const hits = getIntersection(event);
+    if (!hits.length) {
+        rollOverMesh.visible = false;
+        return;
+    }
+
+    const hit = hits[0];
+
+    if (currentMode === "erase") {
+        rollOverMesh.visible = hit.object !== planeGrid;
+        if (rollOverMesh.visible) {
+            rollOverMesh.position.copy(hit.object.position);
+        }
+        return;
+    }
+
+    let pos = hit.point.clone();
+    if (hit.object !== planeGrid) pos.add(hit.face.normal);
+
+    rollOverMesh.position.set(
+        Math.floor(pos.x) + 0.5,
+        Math.floor(pos.y) + 0.5,
+        Math.floor(pos.z) + 0.5
+    );
+    rollOverMesh.visible = true;
+}
+
+function onPointerDown(event) {
+    // คลิกซ้ายหรือแตะบนมือถือ
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+
+    const hits = getIntersection(event);
+    if (!hits.length) return;
+
+    const hit = hits[0];
+
+    if (currentMode === "erase") {
+        if (hit.object !== planeGrid) removeBlock(hit.object);
+        return;
+    }
+
+    let pos = hit.point.clone();
+    if (hit.object !== planeGrid) pos.add(hit.face.normal);
+
+    const x = Math.floor(pos.x) + 0.5;
+    const y = Math.floor(pos.y) + 0.5;
+    const z = Math.floor(pos.z) + 0.5;
+
+    if (voxels.some(v =>
+        Math.abs(v.position.x-x)<0.01 &&
+        Math.abs(v.position.y-y)<0.01 &&
+        Math.abs(v.position.z-z)<0.01
+    )) return;
+
+    createBlock(x, y, z, currentHexColor);
+}
+
+function createBlock(x, y, z, color) {
+    const material = new THREE.MeshStandardMaterial({
+        color:color, roughness:0.8, metalness:0.05
+    });
+    const voxel = new THREE.Mesh(cubeGeo, material);
+    voxel.position.set(x, y, z);
+    voxel.userData.color = color;
+    scene.add(voxel);
+    voxels.push(voxel);
+    return voxel;
+}
+
+function removeBlock(voxel) {
+    const index = voxels.indexOf(voxel);
+    if (index < 0) return;
+    scene.remove(voxel);
+    voxel.material.dispose();
+    voxels.splice(index, 1);
+}
+
+function setMode(mode) {
+    currentMode = mode;
+    $("status-mode").textContent = mode === "add" ? "ADD VOXEL" : "ERASE VOXEL";
+    $("status-mode").className =
+        mode === "add" ? "text-cyan-400 font-bold text-sm mb-5" :
+                         "text-red-400 font-bold text-sm mb-5";
+
+    $("btn-mode-add").className = mode === "add"
+        ? "p-2 rounded text-xs font-bold bg-cyan-900 border border-cyan-400"
+        : "p-2 rounded text-xs font-bold border border-gray-600";
+
+    $("btn-mode-erase").className = mode === "erase"
+        ? "p-2 rounded text-xs font-bold bg-red-950 border border-red-500"
+        : "p-2 rounded text-xs font-bold border border-gray-600";
+
+    rollOverMesh.material.color.set(mode === "add" ? 0x00f3ff : 0xff0055);
+}
+
+function updateColor(hex) {
+    currentHexColor = hex;
+    $("color-hex").textContent = hex.toUpperCase();
+    $("block-color").value = hex;
+    if (currentMode === "add") rollOverMesh.material.color.set(hex);
+}
+
+function clearCanvas() {
+    if (!confirm("ต้องการล้างบล็อกทั้งหมดหรือไม่?")) return;
+    for (const voxel of voxels) {
+        scene.remove(voxel);
+        voxel.material.dispose();
+    }
+    voxels.length = 0;
+    notify("ล้างกระดานเรียบร้อย");
+}
+
+function togglePanel(id) {
+    $(id).classList.toggle("open");
+}
+
+function animate() {
+    requestAnimationFrame(animate);
+    controls.update();
+    renderer.render(scene, camera);
+}
+
+// ========================================
+// MINECRAFT ENTITY PREFABS
+// ขนาดทั้งหมดเป็นหน่วยบล็อก
+// ========================================
+
+function buildBox(x,y,z,sx,sy,sz,color) {
+    for (let i=0;i<sx;i++)
+    for (let j=0;j<sy;j++)
+    for (let k=0;k<sz;k++) {
+        createBlock(x+i+0.5, y+j+0.5, z+k+0.5, color);
+    }
+}
+
+function buildHuman(type) {
+    const zombie = type === "zombie" || type === "drowned" ||
+                   type === "husk" || type === "zombie_villager";
+    const skeleton = type === "skeleton" || type === "stray" ||
+                     type === "wither_skeleton";
+    const alex = type === "alex";
+    const villager = type === "villager";
+    const witch = type === "witch";
+    const warden = type === "warden";
+
+    let skin = "#e0a16b", shirt = "#2475a8", pants = "#263b8a";
+    let arm = "#e0a16b", leg = pants, head = skin;
+    let armWidth = alex || skeleton ? 1 : 2;
+
+    if (zombie) { skin="#4a9b50"; shirt="#226b55"; pants="#334c91"; arm=skin; }
+    if (type==="drowned") { skin="#568b8b"; shirt="#396d78"; arm=skin; }
+    if (type==="husk") { skin="#bda16c"; shirt="#a98c45"; arm=skin; }
+    if (skeleton) { skin="#d4d4d4"; shirt="#b9b9b9"; pants="#a4a4a4"; arm=skin; leg=pants; }
+    if (villager) { skin="#b77d53"; shirt="#78634e"; pants="#51483e"; arm=skin; }
+    if (witch) { skin="#9b9275"; shirt="#49345c"; pants="#30213f"; arm=skin; }
+    if (warden) { skin="#167c72"; shirt="#123b4d"; pants="#123b4d"; arm=skin; }
+    if (type==="steve") { skin="#bd825a"; shirt="#00a8ff"; pants="#354b91"; arm=skin; }
+    if (type==="alex") { skin="#e8b28b"; shirt="#e87524"; pants="#2864a3"; arm=skin; }
+    if (type==="stray") { shirt="#b8dce0"; pants="#d7e9e9"; }
+    if (type==="wither_skeleton") { skin="#333333"; shirt="#292929"; pants="#222222"; arm=skin; leg=pants; }
+
+    const headSize = warden ? 6 : 4;
+    const headX = -Math.floor(headSize/2);
+    const headY = warden ? 13 : 10;
+    const headZ = -2;
+
+    buildBox(headX,headY,headZ,headSize,4,4,head);
+
+    // ตา
+    if (zombie || type==="steve" || type==="alex" || warden) {
+        buildBox(-1,headY+1,1,1,1,1,warden?"#00e8c8":"#25252b");
+        buildBox(1,headY+1,1,1,1,1,warden?"#00e8c8":"#25252b");
+    }
+
+    if (villager || witch) {
+        buildBox(-1,headY-1,2,2,1,1,"#67432d");
+        buildBox(-3,headY+3,-2,6,1,6,witch?"#24152e":"#57402c");
+    }
+
+    buildBox(-2,4,-1,4,6,2,shirt);
+
+    if (skeleton) {
+        buildBox(-1,6,-1,2,1,2,"#eeeeee");
+    }
+
+    if (zombie) {
+        buildBox(-4,8,-4,2,2,5,arm);
+        buildBox(2,8,-4,2,2,5,arm);
+    } else {
+        buildBox(-2-armWidth,4,-1,armWidth,6,2,arm);
+        buildBox(2,4,-1,armWidth,6,2,arm);
+    }
+
+    buildBox(-2,-2,-1,2,6,2,leg);
+    buildBox(0,-2,-1,2,6,2,leg);
+
+    if (warden) {
+        buildBox(-4,11,-2,2,2,2,"#00a89c");
+        buildBox(2,11,-2,2,2,2,"#00a89c");
+        buildBox(-4,8,-1,2,2,2,"#167c72");
+        buildBox(2,8,-1,2,2,2,"#167c72");
+    }
+}
+
+function buildCreeper() {
+    buildBox(-2,8,-2,4,4,4,"#65ad38");
+    buildBox(-1,2,-1,2,6,2,"#39872b");
+    buildBox(-2,0,-2,2,3,2,"#3d8c2d");
+    buildBox(0,0,-2,2,3,2,"#3d8c2d");
+    buildBox(-2,0,0,2,3,2,"#3d8c2d");
+    buildBox(0,0,0,2,3,2,"#3d8c2d");
+    buildBox(-1,9,1,1,2,1,"#17251a");
+    buildBox(1,9,1,1,2,1,"#17251a");
+    buildBox(-1,8,1,2,1,1,"#17251a");
+    buildBox(0,7,1,1,1,1,"#17251a");
+}
+
+function buildSpider() {
+    buildBox(-2,2,-2,4,2,4,"#29212b");
+    buildBox(-1,2,2,2,2,2,"#17131c");
+    buildBox(-2,3,-3,4,1,2,"#342638");
+    buildBox(-2,3,1,4,1,2,"#342638");
+    buildBox(-3,2,-3,2,1,2,"#29212b");
+    buildBox(1,2,-3,2,1,2,"#29212b");
+    buildBox(-4,1,-1,2,1,2,"#29212b");
+    buildBox(2,1,-1,2,1,2,"#29212b");
+    buildBox(-4,0,1,2,1,2,"#29212b");
+    buildBox(2,0,1,2,1,2,"#29212b");
+    buildBox(-1,3,3,1,1,1,"#ff2222");
+    buildBox(1,3,3,1,1,1,"#ff2222");
+}
+
+function buildQuadruped(type) {
+    let body="#a76b36", head=body, leg="#61442b", special=null;
+    if (type==="cow") { body="#76503b"; head="#76503b"; leg="#514035"; special="cow"; }
+    if (type==="sheep") { body="#eeeeee"; head="#d5c0a4"; leg="#82746a"; special="sheep"; }
+    if (type==="pig") { body="#ef9eae"; head="#edb0ba"; leg="#c7798b"; }
+    if (type==="wolf") { body="#999b9e"; head="#b4b5b7"; leg="#797b7e"; }
+    if (type==="cat") { body="#e6a54d"; head="#e6a54d"; leg="#b8782d"; }
+    if (type==="horse") { body="#98613b"; head="#98613b"; leg="#44362d"; }
+    if (type==="iron_golem") { body="#bdb8ad"; head="#c8c3b8"; leg="#918d84"; }
+
+    buildBox(-2,3,-3,4,3,6,body);
+    buildBox(-2,4,-5,4,3,3,head);
+
+    buildBox(-2,0,-2,1,3,1,leg);
+    buildBox(1,0,-2,1,3,1,leg);
+    buildBox(-2,0,2,1,3,1,leg);
+    buildBox(1,0,2,1,3,1,leg);
+
+    if (type==="cow") {
+        buildBox(-2,5,-5,1,1,1,"#f3eee2");
+        buildBox(1,5,-5,1,1,1,"#f3eee2");
+        buildBox(-3,7,-5,1,2,1,"#ddd2b6");
+        buildBox(2,7,-5,1,2,1,"#ddd2b6");
+    }
+    if (type==="sheep") buildBox(-3,3,-3,6,3,6,"#f5f5f5");
+    if (type==="pig") buildBox(-1,4,-6,2,1,1,"#b45f79");
+    if (type==="wolf") {
+        buildBox(-1,4,-6,2,1,1,"#e1e1e1");
+        buildBox(-1,4,-6,1,1,1,"#292929");
+    }
+    if (type==="cat") {
+        buildBox(-2,6,-5,1,2,1,"#e6a54d");
+        buildBox(1,6,-5,1,2,1,"#e6a54d");
+        buildBox(-1,2,3,2,1,3,"#e6a54d");
+    }
+    if (type==="horse") {
+        buildBox(-1,5,-6,2,3,2,"#98613b");
+        buildBox(-1,7,-6,1,2,1,"#44362d");
+        buildBox(0,7,-6,1,2,1,"#44362d");
+    }
+    if (type==="iron_golem") {
+        buildBox(-3,4,-2,2,5,2,body);
+        buildBox(2,4,-2,2,5,2,body);
+        buildBox(-1,5,-5,2,1,1,"#467c56");
+    }
+}
+
+function buildChicken() {
+    buildBox(-1,2,-1,2,2,3,"#f2f2f2");
+    buildBox(-1,4,-3,2,2,2,"#f2f2f2");
+    buildBox(-1,4,-4,2,1,1,"#ffb7a4");
+    buildBox(0,3,-4,1,1,1,"#ed493c");
+    buildBox(-1,1,-1,1,1,1,"#e9a12a");
+    buildBox(1,1,-1,1,1,1,"#e9a12a");
+    buildBox(-2,3,0,1,2,1,"#dddddd");
+    buildBox(1,3,0,1,2,1,"#dddddd");
+}
+
+function buildBlaze() {
+    buildBox(-1,4,-1,2,3,2,"#f2bd28");
+    buildBox(-1,6,-1,2,1,2,"#fff06a");
+    for(let i=0;i<3;i++) {
+        const y=2+i*2;
+        buildBox(-3,y,-1,2,1,1,"#f59e0b");
+        buildBox(2,y,-1,2,1,1,"#f59e0b");
+        buildBox(-1,y,-3,1,1,2,"#f59e0b");
+        buildBox(0,y,2,1,1,2,"#f59e0b");
+    }
+}
+
+function buildSlime() {
+    buildBox(-3,0,-3,6,6,6,"#62d66b");
+    buildBox(-2,3,2,1,1,1,"#164c28");
+    buildBox(1,3,2,1,1,1,"#164c28");
+    buildBox(-1,1,2,2,1,1,"#164c28");
+}
+
+function buildGhast() {
+    buildBox(-4,5,-4,8,8,8,"#eeeeee");
+    buildBox(-2,10,4,1,1,1,"#333333");
+    buildBox(1,10,4,1,1,1,"#333333");
+    buildBox(-1,8,4,2,1,1,"#555555");
+    for(let i=-3;i<=3;i+=2) buildBox(i,-1,2,1,5,1,"#e5e5e5");
+}
+
+function buildEnderman() {
+    buildBox(-2,18,-2,4,4,4,"#19152d");
+    buildBox(-2,10,-1,4,8,2,"#181623");
+    buildBox(-4,2,-1,2,16,2,"#14121f");
+    buildBox(2,2,-1,2,16,2,"#14121f");
+    buildBox(-2,-8,-1,2,10,2,"#14121f");
+    buildBox(0,-8,-1,2,10,2,"#14121f");
+    buildBox(-1,19,2,1,1,1,"#c94aff");
+    buildBox(1,19,2,1,1,1,"#c94aff");
+}
+
+function buildWitch() {
+    buildHuman("witch");
+    buildBox(-3,14,-3,6,1,6,"#34213f");
+    buildBox(-2,15,-2,4,1,4,"#25182f");
+    buildBox(-1,16,-1,2,1,2,"#211529");
+}
+
+const ENTITY_NAMES = {
+    steve:"🧍 Steve", alex:"🧍 Alex",
+    zombie:"🧟 Zombie", zombie_villager:"🧟 Zombie Villager",
+    drowned:"🌊 Drowned", husk:"🏜️ Husk",
+    skeleton:"💀 Skeleton", stray:"❄️ Stray",
+    wither_skeleton:"☠️ Wither Skeleton",
+    creeper:"💥 Creeper", enderman:"👾 Enderman",
+    spider:"🕷️ Spider", cave_spider:"🕷️ Cave Spider",
+    pig:"🐷 Pig", cow:"🐄 Cow", sheep:"🐑 Sheep",
+    chicken:"🐔 Chicken", wolf:"🐺 Wolf", cat:"🐈 Cat",
+    horse:"🐎 Horse", iron_golem:"🗿 Iron Golem",
+    villager:"🧑 Villager", witch:"🧙 Witch",
+    blaze:"🔥 Blaze", slime:"🟢 Slime", ghast:"👻 Ghast",
+    warden:"🟦 Warden"
+};
+
+function injectEntity(type) {
+    for (const voxel of voxels) {
+        scene.remove(voxel);
+        voxel.material.dispose();
+    }
+    voxels.length = 0;
+
+    switch(type) {
+        case "steve":
+        case "alex":
+        case "zombie":
+        case "zombie_villager":
+        case "drowned":
+        case "husk":
+        case "skeleton":
+        case "stray":
+        case "wither_skeleton":
+        case "villager":
+        case "witch":
+        case "warden":
+            if(type==="witch") buildWitch();
+            else buildHuman(type);
+            break;
+        case "creeper": buildCreeper(); break;
+        case "enderman": buildEnderman(); break;
+        case "spider":
+        case "cave_spider": buildSpider(); break;
+        case "pig":
+        case "cow":
+        case "sheep":
+        case "wolf":
+        case "cat":
+        case "horse":
+        case "iron_golem": buildQuadruped(type); break;
+        case "chicken": buildChicken(); break;
+        case "blaze": buildBlaze(); break;
+        case "slime": buildSlime(); break;
+        case "ghast": buildGhast(); break;
+    }
+
+    controls.target.set(0, 5, 0);
+    controls.update();
+    notify("โหลดโมเดล " + ENTITY_NAMES[type]);
+}
+
+function createEntityButtons() {
+    const list = $("entity-list");
+    for (const [type,name] of Object.entries(ENTITY_NAMES)) {
+        const btn = document.createElement("button");
+        btn.className =
+            "w-full text-left p-3 rounded bg-white/5 border border-white/10 " +
+            "hover:border-cyan-400 hover:bg-cyan-900/30 transition text-sm";
+        btn.textContent = name + "  → LOAD";
+        btn.addEventListener("click", () => injectEntity(type));
+        list.appendChild(btn);
+    }
+}
+
+// ========================================
+// EXPORT
+// ========================================
+
+function downloadFile(content, filename, mime) {
+    const blob = new Blob([content], {type:mime});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function exportTXT() {
+    if (!voxels.length) {
+        alert("ไม่มีบล็อกให้ส่งออก");
+        return;
+    }
+    let output = "# CyberCraft 3D Voxel Matrix\n";
+    output += "# X|Y|Z|HEX_COLOR\n";
+    for (const v of voxels) {
+        output += [
+            Math.floor(v.position.x),
+            Math.floor(v.position.y),
+            Math.floor(v.position.z),
+            v.userData.color
+        ].join("|") + "\n";
+    }
+    downloadFile(output, "model_matrix.txt", "text/plain;charset=utf-8");
+}
+
+function exportMCJSON() {
+    if (!voxels.length) {
+        alert("ไม่มีบล็อกให้ส่งออก");
+        return;
+    }
+
+    const elements = [];
+    const faces = {};
+    for (const side of ["down","up","north","south","west","east"]) {
+        faces[side] = {
+            uv:[0,0,16,16],
+            texture:"#0"
+        };
+    }
+
+    voxels.forEach((v,index) => {
+        const x = v.position.x;
+        const y = v.position.y;
+        const z = v.position.z;
+        const color = v.userData.color;
+
+        // บันทึกสีของแต่ละบล็อกไว้ในชื่อ element
+        elements.push({
+            name:"cube_" + index + "_" + color.replace("#",""),
+            from:[x-0.5,y-0.5,z-0.5],
+            to:[x+0.5,y+0.5,z+0.5],
+            faces:JSON.parse(JSON.stringify(faces))
+        });
+    });
+
+    const model = {
+        credit:"Generated by CyberCraft 3D Neo-Modeler V2",
+        texture_size:[16,16],
+        textures:{"0":"block/custom_texture"},
+        elements:elements
+    };
+
+    downloadFile(JSON.stringify(model,null,2),
+        "minecraft_model.json","application/json");
+}
+
+function exportJavaMod() {
+    if (!voxels.length) {
+        alert("ไม่มีบล็อกให้ส่งออก");
+        return;
+    }
+
+    const lines = [];
+    lines.push("// Generated by CyberCraft 3D Neo-Modeler V2");
+    lines.push("// Java model snippet for Minecraft mod development");
+    lines.push("// Requires the matching Minecraft/Forge/NeoForge mappings.");
+    lines.push("");
+    lines.push("MeshDefinition meshdefinition = new MeshDefinition();");
+    lines.push("PartDefinition partdefinition = meshdefinition.getRoot();");
+    lines.push("");
+
+    voxels.forEach((v,index) => {
+        const x = (v.position.x-0.5).toFixed(1);
+        const y = (v.position.y-0.5).toFixed(1);
+        const z = (v.position.z-0.5).toFixed(1);
+
+        lines.push(
+            'partdefinition.addOrReplaceChild("cube_' + index + '", ' +
+            'CubeListBuilder.create().texOffs(0, 0).addBox(' +
+            x + 'F, ' + y + 'F, ' + z +
+            'F, 1.0F, 1.0F, 1.0F), PartPose.ZERO);'
+        );
+    });
+
+    lines.push("");
+    lines.push("// LayerDefinition.create(meshdefinition, 64, 64);");
+    lines.push("// Add the appropriate EntityModel/LayerDefinition class");
+    lines.push("// and imports for your target Minecraft mod version.");
+
+    downloadFile(lines.join("\n"),"CustomCyberModel.java","text/plain;charset=utf-8");
+}
+
+// ========================================
+// START
+// ========================================
+
+try {
+    init();
+    createEntityButtons();
+} catch (error) {
+    console.error(error);
+    alert("เริ่มต้นโปรแกรมไม่สำเร็จ กรุณาตรวจสอบอินเทอร์เน็ตและลิงก์ Three.js");
+}
+</script>
+
+</body>
+</html>
